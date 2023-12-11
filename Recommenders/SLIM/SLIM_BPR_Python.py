@@ -22,8 +22,9 @@ class SLIM_BPR_Python(BaseItemSimilarityMatrixRecommender):
     This class does not implement early stopping
     """
 
-    def __init__(self, URM_train, ):
+    def __init__(self, URM_train, verbose = True):
         super(SLIM_BPR_Python, self).__init__(URM_train)
+        self.verbose = verbose
 
 
 
@@ -40,7 +41,7 @@ class SLIM_BPR_Python(BaseItemSimilarityMatrixRecommender):
 
 
         # Initialize similarity with zero values
-        self.item_item_S = np.zeros((self.n_items, self.n_items), dtype = np.float)
+        self.item_item_S = np.zeros((self.n_items, self.n_items), dtype = float)
 
         self.lambda_i = lambda_i
         self.lambda_j = lambda_j
@@ -51,7 +52,8 @@ class SLIM_BPR_Python(BaseItemSimilarityMatrixRecommender):
         for n_epoch in range(epochs):
             self._run_epoch(n_epoch)
 
-        print("Train completed in {:.2f} minutes".format(float(time.time()-start_time_train)/60))
+        if self.verbose:
+            print("Train completed in {:.2f} minutes".format(float(time.time()-start_time_train)/60))
 
         self.W_sparse = similarityMatrixTopK(self.item_item_S, k=topK, verbose=False)
         self.W_sparse = sps.csr_matrix(self.W_sparse)
@@ -85,7 +87,7 @@ class SLIM_BPR_Python(BaseItemSimilarityMatrixRecommender):
             self.item_item_S[neg_item_id, neg_item_id] = 0
 
             # Print some stats
-            if (sample_num + 1) % 150000 == 0 or (sample_num + 1) == self.n_users:
+            if ((sample_num + 1) % 150000 == 0 or (sample_num + 1) == self.n_users) and self.verbose:
                 elapsed_time = time.time() - start_time
                 samples_per_second = (sample_num + 1) / elapsed_time
                 print("Epoch {}, Iteration {} in {:.2f} seconds. Samples per second {:.2f}".format(n_epoch+1, sample_num+1, elapsed_time, samples_per_second))
